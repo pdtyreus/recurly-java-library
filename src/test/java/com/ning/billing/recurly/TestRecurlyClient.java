@@ -283,6 +283,7 @@ public class TestRecurlyClient {
             accountData.setBillingInfo(billingInfoData);
             t.setAccount(accountData);
             t.setAmountInCents(15);
+            t.setDescription("Transaction Description");
             t.setCurrency(CURRENCY);
             final Transaction createdT = recurlyClient.createTransaction(t);
 

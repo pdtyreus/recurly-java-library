@@ -65,6 +65,9 @@ public class Transaction extends RecurlyObject {
 
     @XmlElement(name = "created_at")
     private DateTime createdAt;
+    
+    @XmlElement(name = "description")
+    private String description;
 
     public Account getAccount() {
         return account;
@@ -274,5 +277,13 @@ public class Transaction extends RecurlyObject {
         result = 31 * result + (refundable != null ? refundable.hashCode() : 0);
         result = 31 * result + (createdAt != null ? createdAt.hashCode() : 0);
         return result;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 }
