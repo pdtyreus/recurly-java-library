@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2012 Ning, Inc.
+ * Copyright 2010-2013 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -70,6 +70,9 @@ public class Adjustment extends RecurlyObject {
     private DateTime createdAt;
 
     public Account getAccount() {
+        if (account != null && account.getCreatedAt() == null) {
+            account = fetch(account, Account.class);
+        }
         return account;
     }
 

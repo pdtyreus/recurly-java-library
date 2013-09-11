@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2012 Ning, Inc.
+ * Copyright 2010-2013 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -24,6 +24,7 @@ import org.joda.time.DateTime;
 
 import com.ning.billing.recurly.model.Account;
 import com.ning.billing.recurly.model.AddOn;
+import com.ning.billing.recurly.model.Address;
 import com.ning.billing.recurly.model.BillingInfo;
 import com.ning.billing.recurly.model.Plan;
 import com.ning.billing.recurly.model.Subscription;
@@ -109,6 +110,16 @@ public class TestUtils {
         account.setEmail(getRandomAlphaNumString(4) + "@test.com");
         account.setFirstName(getRandomAlphaNumString(5));
         account.setLastName(getRandomAlphaNumString(6));
+
+        final Address address = new Address();
+        address.setAddress1(UUID.randomUUID().toString());
+        address.setAddress2(UUID.randomUUID().toString());
+        address.setCity(UUID.randomUUID().toString());
+        address.setState(UUID.randomUUID().toString());
+        address.setZip(49302);
+        address.setCountry(UUID.randomUUID().toString());
+        address.setPhone(UUID.randomUUID().toString());
+        account.setAddress(address);
 
         return account;
     }
@@ -257,6 +268,7 @@ public class TestUtils {
         sub.setCurrentPeriodEndsAt(DateTime.now());
         sub.setTrialStartedAt(DateTime.now());
         sub.setTrialEndsAt(DateTime.now());
+        sub.setStartsAt(DateTime.now());
         final List<AddOn> addOns = new ArrayList<AddOn>();
         for (int i = 0; i < randomInteger(10); i++) {
             addOns.add(createRandomAddOn());
@@ -295,7 +307,7 @@ public class TestUtils {
         addOn.setAddOnCode(getRandomAlphaNumString(10));
         addOn.setName(getRandomAlphaNumString(10));
         addOn.setUnitAmountInCents(createRandomPrice());
-
+        addOn.setQuantity(5);
         return addOn;
     }
 

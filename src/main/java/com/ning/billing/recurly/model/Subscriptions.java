@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2012 Ning, Inc.
+ * Copyright 2010-2013 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -24,4 +24,16 @@ public class Subscriptions extends RecurlyObjects<Subscription> {
 
     @XmlTransient
     public static final String SUBSCRIPTIONS_RESOURCE = "/subscriptions";
+
+    public Subscriptions getStart() {
+        return getStart(Subscriptions.class);
+    }
+
+    public Subscriptions getPrev() {
+        return getPrev(Subscriptions.class);
+    }
+
+    public Subscriptions getNext() {
+        return getNext(Subscriptions.class);
+    }
 }

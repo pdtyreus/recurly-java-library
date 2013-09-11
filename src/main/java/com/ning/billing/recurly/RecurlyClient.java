@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2012 Ning, Inc.
+ * Copyright 2010-2013 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -18,6 +18,7 @@ package com.ning.billing.recurly;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Scanner;
 import java.util.concurrent.ExecutionException;
 
 import javax.annotation.Nullable;
@@ -31,11 +32,14 @@ import com.ning.billing.recurly.model.Accounts;
 import com.ning.billing.recurly.model.AddOn;
 import com.ning.billing.recurly.model.BillingInfo;
 import com.ning.billing.recurly.model.Coupon;
+import com.ning.billing.recurly.model.Coupons;
+import com.ning.billing.recurly.model.Errors;
 import com.ning.billing.recurly.model.Invoice;
 import com.ning.billing.recurly.model.Invoices;
 import com.ning.billing.recurly.model.Plan;
 import com.ning.billing.recurly.model.Plans;
 import com.ning.billing.recurly.model.RecurlyObject;
+import com.ning.billing.recurly.model.RecurlyObjects;
 import com.ning.billing.recurly.model.Subscription;
 import com.ning.billing.recurly.model.SubscriptionUpdate;
 import com.ning.billing.recurly.model.Subscriptions;
@@ -46,14 +50,7 @@ import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.AsyncHttpClientConfig;
 import com.ning.http.client.Response;
 
-import com.fasterxml.jackson.databind.AnnotationIntrospector;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.databind.introspect.AnnotationIntrospectorPair;
-import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector;
-import com.fasterxml.jackson.databind.type.TypeFactory;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
-import com.fasterxml.jackson.datatype.joda.JodaModule;
-import com.fasterxml.jackson.module.jaxb.JaxbAnnotationIntrospector;
 
 public class RecurlyClient {
 
@@ -62,8 +59,11 @@ public class RecurlyClient {
     public static final String RECURLY_DEBUG_KEY = "recurly.debug";
     public static final String RECURLY_PAGE_SIZE_KEY = "recurly.page.size";
 
-    private static final Integer DEFAULT_PAGE_SIZE = new Integer(20);
+    private static final Integer DEFAULT_PAGE_SIZE = 20;
     private static final String PER_PAGE = "per_page=";
+
+    private static final String X_RECORDS_HEADER_NAME = "X-Records";
+    private static final String LINK_HEADER_NAME = "Link";
 
     public static final String FETCH_RESOURCE = "/recurly_js/result";
 
@@ -94,7 +94,8 @@ public class RecurlyClient {
         return PER_PAGE + getPageSize().toString();
     }
 
-    private final XmlMapper xmlMapper = new XmlMapper();
+    // TODO: should we make it static?
+    private final XmlMapper xmlMapper;
 
     private final String key;
     private final String baseUrl;
@@ -107,13 +108,7 @@ public class RecurlyClient {
     public RecurlyClient(final String apiKey, final String host, final int port, final String version) {
         this.key = DatatypeConverter.printBase64Binary(apiKey.getBytes());
         this.baseUrl = String.format("https://%s:%d/%s", host, port, version);
-
-        final AnnotationIntrospector primary = new JacksonAnnotationIntrospector();
-        final AnnotationIntrospector secondary = new JaxbAnnotationIntrospector(TypeFactory.defaultInstance());
-        final AnnotationIntrospector pair = new AnnotationIntrospectorPair(primary, secondary);
-        xmlMapper.setAnnotationIntrospector(pair);
-        xmlMapper.registerModule(new JodaModule());
-        xmlMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        this.xmlMapper = RecurlyObject.newXmlMapper();
     }
 
     /**
@@ -153,6 +148,10 @@ public class RecurlyClient {
      */
     public Accounts getAccounts() {
         return doGET(Accounts.ACCOUNTS_RESOURCE, Accounts.class);
+    }
+
+    public Coupons getCoupons() {
+        return doGET(Coupons.COUPONS_RESOURCE, Coupons.class);
     }
 
     /**
@@ -571,7 +570,7 @@ public class RecurlyClient {
     ///////////////////////////////////////////////////////////////////////////
 
     private <T> T doGET(final String resource, final Class<T> clazz) {
-        StringBuffer url = new StringBuffer(baseUrl);
+        final StringBuffer url = new StringBuffer(baseUrl);
         url.append(resource);
         if (resource != null && !resource.contains("?")) {
             url.append("?");
@@ -581,10 +580,14 @@ public class RecurlyClient {
         }
         url.append(getPageSizeGetParam());
 
+        return doGETWithFullURL(clazz, url.toString());
+    }
+
+    public <T> T doGETWithFullURL(final Class<T> clazz, final String url) {
         if (debug()) {
             log.info("Msg to Recurly API [GET] :: URL : {}", url);
         }
-        return callRecurlySafe(client.prepareGet(url.toString()), clazz);
+        return callRecurlySafe(client.prepareGet(url), clazz);
     }
 
     private <T> T doPOST(final String resource, final RecurlyObject payload, final Class<T> clazz) {
@@ -630,6 +633,12 @@ public class RecurlyClient {
             log.warn("Error while calling Recurly", e);
             return null;
         } catch (ExecutionException e) {
+            // Extract the errors exception, if any
+            if (e.getCause() != null &&
+                e.getCause().getCause() != null &&
+                e.getCause().getCause() instanceof TransactionErrorException) {
+                throw (TransactionErrorException) e.getCause().getCause();
+            }
             log.error("Execution error", e);
             return null;
         } catch (InterruptedException e) {
@@ -640,6 +649,7 @@ public class RecurlyClient {
 
     private <T> T callRecurly(final AsyncHttpClient.BoundRequestBuilder builder, @Nullable final Class<T> clazz)
             throws IOException, ExecutionException, InterruptedException {
+        final RecurlyClient recurlyClient = this;
         return builder.addHeader("Authorization", "Basic " + key)
                       .addHeader("Accept", "application/xml")
                       .addHeader("Content-Type", "application/xml; charset=utf-8")
@@ -649,7 +659,10 @@ public class RecurlyClient {
                               if (response.getStatusCode() >= 300) {
                                   log.warn("Recurly error whilst calling: {}", response.getUri());
                                   log.warn("Recurly error: {}", response.getResponseBody());
-                                  return null;
+                                  // 422 can signal a transaction error, see http://docs.recurly.com/api/transactions/error-codes
+                                  if (response.getStatusCode() != 422) {
+                                      return null;
+                                  }
                               }
 
                               if (clazz == null) {
@@ -658,11 +671,51 @@ public class RecurlyClient {
 
                               final InputStream in = response.getResponseBodyAsStream();
                               try {
-                                  String payload = convertStreamToString(in);
+                                  final String payload = convertStreamToString(in);
                                   if (debug()) {
                                       log.info("Msg from Recurly API :: {}", payload);
                                   }
-                                  T obj = xmlMapper.readValue(payload, clazz);
+
+                                  // Handle errors payload
+                                  if (response.getStatusCode() == 422) {
+                                      final Errors errors;
+                                      try {
+                                          errors = xmlMapper.readValue(payload, Errors.class);
+                                      } catch (Exception e) {
+                                          // Unclear if 422 is returned only for transaction errors?
+                                          log.debug("Unable to extract error", e);
+                                          return null;
+                                      }
+                                      throw new TransactionErrorException(errors);
+                                  }
+
+                                  final T obj = xmlMapper.readValue(payload, clazz);
+                                  if (obj instanceof RecurlyObject) {
+                                      ((RecurlyObject) obj).setRecurlyClient(recurlyClient);
+                                  } else if (obj instanceof RecurlyObjects) {
+                                      final RecurlyObjects recurlyObjects = (RecurlyObjects) obj;
+                                      recurlyObjects.setRecurlyClient(recurlyClient);
+
+                                      // Set the RecurlyClient on all objects for later use
+                                      for (final Object object : recurlyObjects) {
+                                          ((RecurlyObject) object).setRecurlyClient(recurlyClient);
+                                      }
+
+                                      // Set the total number of records
+                                      final String xRecords = response.getHeader(X_RECORDS_HEADER_NAME);
+                                      if (xRecords != null) {
+                                          recurlyObjects.setNbRecords(Integer.valueOf(xRecords));
+                                      }
+
+                                      // Set links for pagination
+                                      final String linkHeader = response.getHeader(LINK_HEADER_NAME);
+                                      if (linkHeader != null) {
+                                          final String[] links = PaginationUtils.getLinks(linkHeader);
+                                          recurlyObjects.setStartUrl(links[0]);
+                                          recurlyObjects.setPrevUrl(links[1]);
+                                          recurlyObjects.setNextUrl(links[2]);
+                                      }
+                                  }
                                   return obj;
                               } finally {
                                   closeStream(in);
@@ -671,9 +724,9 @@ public class RecurlyClient {
                       }).get();
     }
 
-    private String convertStreamToString(java.io.InputStream is) {
+    private String convertStreamToString(final java.io.InputStream is) {
         try {
-            return new java.util.Scanner(is).useDelimiter("\\A").next();
+            return new Scanner(is).useDelimiter("\\A").next();
         } catch (java.util.NoSuchElementException e) {
             return "";
         }

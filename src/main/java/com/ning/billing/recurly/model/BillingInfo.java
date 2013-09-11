@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2012 Ning, Inc.
+ * Copyright 2010-2013 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -97,6 +97,9 @@ public class BillingInfo extends RecurlyObject {
      * @return account object
      */
     public Account getAccount() {
+        if (account != null && account.getCreatedAt() == null) {
+            account = fetch(account, Account.class);
+        }
         return account;
     }
 

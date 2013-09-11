@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2012 Ning, Inc.
+ * Copyright 2010-2013 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -60,7 +60,13 @@ public class Subscription extends AbstractSubscription {
     @XmlElement(name = "trial_ends_at")
     private DateTime trialEndsAt;
 
+    @XmlElement(name = "starts_at")
+    private DateTime startsAt;
+
     public Account getAccount() {
+        if (account != null && account.getCreatedAt() == null) {
+            account = fetch(account, Account.class);
+        }
         return account;
     }
 
@@ -156,6 +162,14 @@ public class Subscription extends AbstractSubscription {
         this.trialEndsAt = dateTimeOrNull(trialEndsAt);
     }
 
+    public DateTime getStartsAt() {
+        return startsAt;
+    }
+
+    public void setStartsAt(final Object startsAt) {
+        this.startsAt = dateTimeOrNull(startsAt);
+    }
+
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();
@@ -174,6 +188,7 @@ public class Subscription extends AbstractSubscription {
         sb.append(", currentPeriodEndsAt=").append(currentPeriodEndsAt);
         sb.append(", trialStartedAt=").append(trialStartedAt);
         sb.append(", trialEndsAt=").append(trialEndsAt);
+        sb.append(", startsAt=").append(startsAt);
         sb.append(", addOns=").append(addOns);
         sb.append('}');
         return sb.toString();
@@ -237,6 +252,9 @@ public class Subscription extends AbstractSubscription {
         if (uuid != null ? !uuid.equals(that.uuid) : that.uuid != null) {
             return false;
         }
+        if (startsAt != null ? !startsAt.equals(that.startsAt) : that.startsAt != null) {
+            return false;
+        }
 
         return true;
     }
@@ -258,6 +276,7 @@ public class Subscription extends AbstractSubscription {
         result = 31 * result + (trialStartedAt != null ? trialStartedAt.hashCode() : 0);
         result = 31 * result + (trialEndsAt != null ? trialEndsAt.hashCode() : 0);
         result = 31 * result + (addOns != null ? addOns.hashCode() : 0);
+        result = 31 * result + (startsAt != null ? startsAt.hashCode() : 0);
         return result;
     }
 }

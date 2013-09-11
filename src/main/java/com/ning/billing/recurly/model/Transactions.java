@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2012 Ning, Inc.
+ * Copyright 2010-2013 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -27,4 +27,16 @@ public class Transactions extends RecurlyObjects<Transaction> {
 
     @XmlTransient
     public static final String TRANSACTIONS_RESOURCE = "/transactions";
+
+    public Transactions getStart() {
+        return getStart(Transactions.class);
+    }
+
+    public Transactions getPrev() {
+        return getPrev(Transactions.class);
+    }
+
+    public Transactions getNext() {
+        return getNext(Transactions.class);
+    }
 }

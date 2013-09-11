@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2012 Ning, Inc.
+ * Copyright 2010-2013 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -20,7 +20,6 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -39,8 +38,8 @@ public class Account extends RecurlyObject {
     @XmlTransient
     public static final Pattern ACCOUNT_CODE_PATTERN = Pattern.compile(ACCOUNT_RESOURCE + "/(.+)$");
 
-    @XmlTransient
-    private String href;
+    @XmlElement(name = "address")
+    private Address address;
 
     @XmlElementWrapper(name = "adjustments")
     @XmlElement(name = "adjustment")
@@ -91,23 +90,26 @@ public class Account extends RecurlyObject {
     @XmlElement(name = "billing_info")
     private BillingInfo billingInfo;
 
-    // Note: I'm not sure why @JsonIgnore is required here - shouldn't @XmlTransient be enough?
-    @JsonIgnore
-    public String getHref() {
-        return href;
-    }
-
+    @Override
     public void setHref(final Object href) {
-        this.href = stringOrNull(href);
+        super.setHref(href);
 
         // If there was an href try to parse out the account code since
         // Recurly doesn't currently provide it elsewhere.
         if (this.href != null) {
-            Matcher m = ACCOUNT_CODE_PATTERN.matcher(this.href);
+            final Matcher m = ACCOUNT_CODE_PATTERN.matcher(this.href);
             if (m.find()) {
                 setAccountCode(m.group(1));
             }
         }
+    }
+
+    public Address getAddress() {
+        return address;
+    }
+
+    public void setAddress(final Address address) {
+        this.address = address;
     }
 
     public List<Adjustment> getAdjustments() {
@@ -232,9 +234,9 @@ public class Account extends RecurlyObject {
 
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder();
-        sb.append("Account");
-        sb.append("{href=").append(href);
+        final StringBuilder sb = new StringBuilder("Account{");
+        sb.append("address=").append(address);
+        sb.append(", href=").append(href);
         sb.append(", adjustments=").append(adjustments);
         sb.append(", invoices=").append(invoices);
         sb.append(", subscriptions=").append(subscriptions);
@@ -269,6 +271,9 @@ public class Account extends RecurlyObject {
             return false;
         }
         if (accountCode != null ? !accountCode.equals(account.accountCode) : account.accountCode != null) {
+            return false;
+        }
+        if (address != null ? !address.equals(account.address) : account.address != null) {
             return false;
         }
         if (adjustments != null ? !adjustments.equals(account.adjustments) : account.adjustments != null) {
@@ -319,7 +324,8 @@ public class Account extends RecurlyObject {
 
     @Override
     public int hashCode() {
-        int result = href != null ? href.hashCode() : 0;
+        int result = address != null ? address.hashCode() : 0;
+        result = 31 * result + (href != null ? href.hashCode() : 0);
         result = 31 * result + (adjustments != null ? adjustments.hashCode() : 0);
         result = 31 * result + (invoices != null ? invoices.hashCode() : 0);
         result = 31 * result + (subscriptions != null ? subscriptions.hashCode() : 0);

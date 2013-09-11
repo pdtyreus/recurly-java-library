@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2012 Ning, Inc.
+ * Copyright 2010-2013 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -24,4 +24,16 @@ public class Plans extends RecurlyObjects<Plan> {
 
     @XmlTransient
     public static final String PLANS_RESOURCE = "/plans";
+
+    public Plans getStart() {
+        return getStart(Plans.class);
+    }
+
+    public Plans getPrev() {
+        return getPrev(Plans.class);
+    }
+
+    public Plans getNext() {
+        return getNext(Plans.class);
+    }
 }
