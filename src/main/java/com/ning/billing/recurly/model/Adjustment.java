@@ -18,11 +18,15 @@ package com.ning.billing.recurly.model;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 
 import org.joda.time.DateTime;
 
 @XmlRootElement(name = "adjustment")
 public class Adjustment extends RecurlyObject {
+    
+    @XmlTransient
+    public static final String ADJUSTMENTS_RESOURCE = "/adjustments";
 
     @XmlElement(name = "account")
     private Account account;

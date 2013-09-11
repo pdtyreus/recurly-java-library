@@ -25,6 +25,7 @@ import org.joda.time.DateTime;
 import com.ning.billing.recurly.model.Account;
 import com.ning.billing.recurly.model.AddOn;
 import com.ning.billing.recurly.model.Address;
+import com.ning.billing.recurly.model.Adjustment;
 import com.ning.billing.recurly.model.BillingInfo;
 import com.ning.billing.recurly.model.Plan;
 import com.ning.billing.recurly.model.Subscription;
@@ -307,7 +308,7 @@ public class TestUtils {
         addOn.setAddOnCode(getRandomAlphaNumString(10));
         addOn.setName(getRandomAlphaNumString(10));
         addOn.setUnitAmountInCents(createRandomPrice());
-        addOn.setQuantity(5);
+        addOn.setDefaultQuantity(5);
         return addOn;
     }
 

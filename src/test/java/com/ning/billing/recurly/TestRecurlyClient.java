@@ -29,6 +29,7 @@ import org.testng.annotations.Test;
 import com.ning.billing.recurly.model.Account;
 import com.ning.billing.recurly.model.Accounts;
 import com.ning.billing.recurly.model.AddOn;
+import com.ning.billing.recurly.model.Adjustment;
 import com.ning.billing.recurly.model.BillingInfo;
 import com.ning.billing.recurly.model.Coupon;
 import com.ning.billing.recurly.model.Coupons;
@@ -434,6 +435,36 @@ public class TestRecurlyClient {
             recurlyClient.deleteAddOn(planData.getPlanCode(), addOn.getAddOnCode());
             // Delete the plan
             recurlyClient.deletePlan(planData.getPlanCode());
+        }
+    }
+    
+    @Test(groups = "integration")
+    public void testCreateAdjustment() throws Exception {
+        // Create a Plan
+        final Account accountData = TestUtils.createRandomAccount();
+        
+
+        try {
+            // Create the account
+            Account accountRecurly = recurlyClient.createAccount(accountData);
+            
+            // Create an Adjustment
+            final Adjustment adjustment = new Adjustment();
+            adjustment.setCurrency("USD");
+            adjustment.setUnitAmountInCents(10001);
+            adjustment.setQuantity(1);
+            adjustment.setDescription("adjustment");
+            Adjustment adjustmentRecurly = recurlyClient.createAccountAdjustment(accountRecurly.getAccountCode(), adjustment);
+
+            // Test the creation
+            Assert.assertNotNull(adjustmentRecurly);
+            Assert.assertEquals(adjustmentRecurly.getTotalInCents().intValue(), adjustment.getUnitAmountInCents().intValue()*adjustment.getQuantity().intValue());
+            Assert.assertEquals(adjustmentRecurly.getDescription(), adjustment.getDescription());
+            Assert.assertEquals(adjustmentRecurly.getUnitAmountInCents(), adjustment.getUnitAmountInCents());
+            Assert.assertEquals(adjustmentRecurly.getQuantity(), adjustment.getQuantity());
+        } finally {
+            // Close the account
+            recurlyClient.closeAccount(accountData.getAccountCode());
         }
     }
 

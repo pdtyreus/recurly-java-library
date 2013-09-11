@@ -51,6 +51,7 @@ import com.ning.http.client.AsyncHttpClientConfig;
 import com.ning.http.client.Response;
 
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import com.ning.billing.recurly.model.Adjustment;
 
 public class RecurlyClient {
 
@@ -293,7 +294,26 @@ public class RecurlyClient {
                      + status,
                      Subscriptions.class);
     }
+    
+    
+    ///////////////////////////////////////////////////////////////////////////
 
+    /**
+     * Create an Adjustment to an Account
+     * <p/>
+     *
+     * @param accountCode The accountCode of the {@link Account } to link to the {@link Adjustment}
+     * @param adjustment    The {@link Adjustment} to create within recurly
+     * @return the {@link Adjustment} object as identified by the passed in object
+     */
+    public Adjustment createAccountAdjustment(final String accountCode, final Adjustment adjustment) {
+        return doPOST(Account.ACCOUNT_RESOURCE +
+                      "/" +
+                      accountCode +
+                      Adjustment.ADJUSTMENTS_RESOURCE,
+                      adjustment, Adjustment.class);
+    }
+    
     ////////////////////////////////////////////////////////////////////////////////////////
 
     /**
