@@ -16,19 +16,18 @@
 
 package com.ning.billing.recurly;
 
-import com.ning.billing.recurly.model.Errors;
+import com.ning.billing.recurly.model.RecurlyAPIError;
 
-// TODO RuntimeException for now as it's unclear which API calls can return such errors
-public class TransactionErrorException extends RuntimeException {
+public class RecurlyAPIException extends RuntimeException {
 
-    private final Errors errors;
+    private final RecurlyAPIError recurlyError;
 
-    public TransactionErrorException(final Errors errors) {
-        super(errors.toString());
-        this.errors = errors;
+    public RecurlyAPIException(final RecurlyAPIError recurlyError) {
+        super(recurlyError.toString());
+        this.recurlyError = recurlyError;
     }
 
-    public Errors getErrors() {
-        return errors;
+    public RecurlyAPIError getRecurlyError() {
+        return recurlyError;
     }
 }

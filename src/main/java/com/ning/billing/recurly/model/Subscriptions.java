@@ -19,20 +19,35 @@ package com.ning.billing.recurly.model;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonSetter;
+
 @XmlRootElement(name = "subscriptions")
 public class Subscriptions extends RecurlyObjects<Subscription> {
 
     @XmlTransient
     public static final String SUBSCRIPTIONS_RESOURCE = "/subscriptions";
 
+    @XmlTransient
+    private static final String PROPERTY_NAME = "subscription";
+
+    @JsonSetter(value = PROPERTY_NAME)
+    @Override
+    public void setRecurlyObject(final Subscription value) {
+        super.setRecurlyObject(value);
+    }
+
+    @JsonIgnore
     public Subscriptions getStart() {
         return getStart(Subscriptions.class);
     }
 
+    @JsonIgnore
     public Subscriptions getPrev() {
         return getPrev(Subscriptions.class);
     }
 
+    @JsonIgnore
     public Subscriptions getNext() {
         return getNext(Subscriptions.class);
     }

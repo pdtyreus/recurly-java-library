@@ -22,33 +22,33 @@ import javax.xml.bind.annotation.XmlTransient;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonSetter;
 
-@XmlRootElement(name = "invoices")
-public class Invoices extends RecurlyObjects<Invoice> {
+@XmlRootElement(name = "add_ons")
+public class AddOns extends RecurlyObjects<AddOn> {
 
     @XmlTransient
-    public static final String INVOICES_RESOURCE = "/invoices";
+    public static final String ADDONS_RESOURCE = "/add_ons";
 
     @XmlTransient
-    private static final String PROPERTY_NAME = "invoice";
+    private static final String PROPERTY_NAME = "add_on";
 
     @JsonSetter(value = PROPERTY_NAME)
     @Override
-    public void setRecurlyObject(final Invoice value) {
+    public void setRecurlyObject(final AddOn value) {
         super.setRecurlyObject(value);
     }
 
     @JsonIgnore
-    public Invoices getStart() {
-        return getStart(Invoices.class);
+    public AddOns getStart() {
+        return getStart(AddOns.class);
     }
 
     @JsonIgnore
-    public Invoices getPrev() {
-        return getPrev(Invoices.class);
+    public AddOns getPrev() {
+        return getPrev(AddOns.class);
     }
 
     @JsonIgnore
-    public Invoices getNext() {
-        return getNext(Invoices.class);
+    public AddOns getNext() {
+        return getNext(AddOns.class);
     }
 }

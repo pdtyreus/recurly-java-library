@@ -14,21 +14,11 @@
  * under the License.
  */
 
-package com.ning.billing.recurly;
+package com.ning.billing.recurly.model;
 
-import com.ning.billing.recurly.model.Errors;
-
-// TODO RuntimeException for now as it's unclear which API calls can return such errors
-public class TransactionErrorException extends RuntimeException {
-
-    private final Errors errors;
-
-    public TransactionErrorException(final Errors errors) {
-        super(errors.toString());
-        this.errors = errors;
-    }
-
-    public Errors getErrors() {
-        return errors;
-    }
+/**
+ * Refund options for subscription changes.
+ */
+public enum RefundOption {
+    partial, full, none
 }

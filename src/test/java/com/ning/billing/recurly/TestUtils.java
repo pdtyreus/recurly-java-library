@@ -16,8 +16,6 @@
 
 package com.ning.billing.recurly;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
@@ -27,8 +25,11 @@ import com.ning.billing.recurly.model.AddOn;
 import com.ning.billing.recurly.model.Address;
 import com.ning.billing.recurly.model.Adjustment;
 import com.ning.billing.recurly.model.BillingInfo;
+import com.ning.billing.recurly.model.Coupon;
 import com.ning.billing.recurly.model.Plan;
 import com.ning.billing.recurly.model.Subscription;
+import com.ning.billing.recurly.model.SubscriptionAddOn;
+import com.ning.billing.recurly.model.SubscriptionAddOns;
 import com.ning.billing.recurly.model.Transaction;
 
 public class TestUtils {
@@ -249,34 +250,26 @@ public class TestUtils {
      * Creates a random {@link com.ning.billing.recurly.model.Subscription} object for use in tests
      *
      * @param currencyCode The currency code for which the subscription will be charged in
+     * @param plan         The associated plan
+     * @param account      The associated account
+     * @param planAddOns   AddOns for that subscription
      * @return The {@link com.ning.billing.recurly.model.Subscription} object
      */
-    public static Subscription createRandomSubscription(final String currencyCode) {
-        //
+    public static Subscription createRandomSubscription(final String currencyCode, final Plan plan, final Account account, final Iterable<AddOn> planAddOns) {
         final Subscription sub = new Subscription();
-        sub.setQuantity(randomInteger(10));
-        sub.setActivatedAt(DateTime.now());
-        sub.setCanceledAt(DateTime.now());
-        sub.setExpiresAt(DateTime.now());
+        // Make sure the quantity is > 0
+        sub.setQuantity(randomInteger(10) + 1);
         sub.setCurrency(createRandomCurrency());
-        sub.setPlan(createRandomPlan());
-        sub.setPlanCode(randomString());
-        sub.setState(getRandomAlphaNumString(5));
-        sub.setAccount(createRandomAccount());
+        sub.setPlanCode(plan.getPlanCode());
+        sub.setAccount(account);
         sub.setUnitAmountInCents(randomInteger(10));
         sub.setCurrency(currencyCode);
-        sub.setCurrentPeriodStartedAt(DateTime.now());
-        sub.setCurrentPeriodEndsAt(DateTime.now());
-        sub.setTrialStartedAt(DateTime.now());
-        sub.setTrialEndsAt(DateTime.now());
-        sub.setStartsAt(DateTime.now());
-        final List<AddOn> addOns = new ArrayList<AddOn>();
-        for (int i = 0; i < randomInteger(10); i++) {
-            addOns.add(createRandomAddOn());
+        final SubscriptionAddOns addOns = new SubscriptionAddOns();
+        for (final AddOn addOn : planAddOns) {
+            addOns.add(createRandomSubscriptionAddOn(addOn.getAddOnCode()));
         }
         sub.setAddOns(addOns);
 
-        //
         return sub;
     }
 
@@ -309,6 +302,21 @@ public class TestUtils {
         addOn.setName(getRandomAlphaNumString(10));
         addOn.setUnitAmountInCents(createRandomPrice());
         addOn.setDefaultQuantity(5);
+        addOn.setDisplayQuantityOnHostedPage(false);
+        return addOn;
+    }
+
+    /**
+     * Creates a random {@link SubscriptionAddOn} for use in Tests.
+     *
+     * @param addOnCode AddOn code
+     * @return The random {@link SubscriptionAddOn}
+     */
+    public static SubscriptionAddOn createRandomSubscriptionAddOn(final String addOnCode) {
+        final SubscriptionAddOn addOn = new SubscriptionAddOn();
+        addOn.setAddOnCode(addOnCode);
+        addOn.setUnitAmountInCents(42);
+        addOn.setQuantity(5);
         return addOn;
     }
 
@@ -324,5 +332,19 @@ public class TestUtils {
         addOn.setUnitAmountInCents(createRandomSinglePrice(currencyCode));
 
         return addOn;
+    }
+
+    /**
+     * Creates a random {@link Coupon} object for use in Tests
+     *
+     * @return The random {@link Coupon} object
+     */
+    public static Coupon createRandomCoupon() {
+        final Coupon coupon = new Coupon();
+        coupon.setName(TestUtils.randomString());
+        coupon.setCouponCode(TestUtils.randomString());
+        coupon.setDiscountType("percent");
+        coupon.setDiscountPercent("10");
+        return coupon;
     }
 }
